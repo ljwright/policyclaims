@@ -4,7 +4,7 @@
 The paper analyzes 45,807 abstracts from ten Epidemiology and Public Health journals and classifies whether the abstract contains a policy claim. 
 The objective is descriptive. The study quantifies trends in the prevalence of policy claims by time, country, journal, field, and study design, with classification performed using a large language model plus human validation.
 
-Preprint: https://www.medrxiv.org/content/10.1101/2025.11.13.25340175v1
+Full paper in American Journal of Epidemiology: https://academic.oup.com/aje/advance-article/doi/10.1093/aje/kwag196/8761610
 
 ---
 
