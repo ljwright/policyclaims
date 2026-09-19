@@ -51,17 +51,17 @@ JOURNAL_ISSNS = {
  #   "S23340": {"issn": "1570-677X", "abbrev": "econ_human_bio"},       
  #   "S21100891323": {"issn": "2332-3493", "abbrev": "am_j_health_econ"},
 
-    # Epidemiology and Public Health
-    "S27024": {"issn": "0300-5771", "abbrev": "int_j_epidemiol"},       
-    "S20224": {"issn": "0749-3797", "abbrev": "am_j_prev_med"},       
-    "S20040": {"issn": "0091-7435", "abbrev": "prev_med"},       
-    "S15470582": {"issn": "1044-3983", "abbrev": "epidemiology"},    
-    "S156988948": {"issn": "0143-005X", "abbrev": "j_epidemiol_comm_health"},   
-    "S2764808104": {"issn": "2468-2667", "abbrev": "lancet_public_health"},  
-    "S168049282": {"issn": "0090-0036", "abbrev": "am_j_public_health"},   
-    "S4210220588": {"issn": "1101-1262", "abbrev": "eur_j_public_health"},  
-    "S170967050": {"issn": "0002-9262", "abbrev": "am_j_epidemiol"},   
+    # Epidemiology and Public Health (largest journals first, for --parallel balancing)
+    "S170967050": {"issn": "0002-9262", "abbrev": "am_j_epidemiol"},
+    "S168049282": {"issn": "0090-0036", "abbrev": "am_j_public_health"},
+    "S20040": {"issn": "0091-7435", "abbrev": "prev_med"},
+    "S20224": {"issn": "0749-3797", "abbrev": "am_j_prev_med"},
+    "S27024": {"issn": "0300-5771", "abbrev": "int_j_epidemiol"},
+    "S156988948": {"issn": "0143-005X", "abbrev": "j_epidemiol_comm_health"},
+    "S4210220588": {"issn": "1101-1262", "abbrev": "eur_j_public_health"},
+    "S15470582": {"issn": "1044-3983", "abbrev": "epidemiology"},
     "S48690275": {"issn": "0393-2990", "abbrev": "eur_j_epidemiol"},
+    "S2764808104": {"issn": "2468-2667", "abbrev": "lancet_public_health"},
 
     # Health Policy
   #  "S15926": {"issn": "0278-2715", "abbrev": "health_affairs"},       
@@ -279,12 +279,27 @@ def fetch_or_load_journal(journal_id, journal_info, refresh=False):
     return all_records
 
 
-def save_processed_data(refresh=False):
-    for journal_id, journal_info in JOURNAL_ISSNS.items():
-        print("=" * 50)
-        print(f"Processing: {journal_id} ({journal_info['abbrev']})")
-        print("=" * 50)
-        fetch_or_load_journal(journal_id, journal_info, refresh=refresh)
+def _run_one_journal(args):
+    journal_id, journal_info, refresh = args
+    print("=" * 50)
+    print(f"Processing: {journal_id} ({journal_info['abbrev']})")
+    print("=" * 50)
+    fetch_or_load_journal(journal_id, journal_info, refresh=refresh)
+    return journal_id
+
+
+def save_processed_data(refresh=False, parallel=1):
+    """Fetch every journal; with parallel > 1, journals are fetched in that many
+    processes (each journal file is written by exactly one process, so this is
+    resume-safe). Scopus allows 9 requests/s; 5 workers use about 5-6."""
+    jobs = [(jid, info, refresh) for jid, info in JOURNAL_ISSNS.items()]
+    if parallel > 1:
+        from concurrent.futures import ProcessPoolExecutor
+        with ProcessPoolExecutor(max_workers=parallel) as pool:
+            list(pool.map(_run_one_journal, jobs))
+    else:
+        for job in jobs:
+            _run_one_journal(job)
     print("All done.")
 
 if __name__ == "__main__":
@@ -293,6 +308,7 @@ if __name__ == "__main__":
     
     parser = argparse.ArgumentParser(description="Fetch Scopus journal articles, year by year.")
     parser.add_argument("--refresh", action="store_true", help="Ignore cached files and start fresh.")
+    parser.add_argument("--parallel", type=int, default=1, metavar="N", help="Fetch N journals at a time (default 1; 5 is safe under Scopus's 9 req/s limit).")
     args = parser.parse_args()
 
-    save_processed_data(refresh=args.refresh)
+    save_processed_data(refresh=args.refresh, parallel=args.parallel)

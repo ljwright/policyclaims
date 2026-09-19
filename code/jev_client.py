@@ -296,9 +296,9 @@ class BudgetGuard:
             )
 
 
-def estimate_cost_usd(abstracts: Iterable[str], overhead_tokens: int = 600) -> float:
+def estimate_cost_usd(abstracts: Iterable[str], overhead_tokens: int = 1300) -> float:
     """Rough pre-run estimate: ~4 characters per token for the abstract plus the
-    fixed cost of the two questions (measured at ~600 tokens)."""
+    fixed cost of the two questions (measured at ~1,300 tokens)."""
     total_tokens = sum(len(a or "") / 4.0 + overhead_tokens for a in abstracts)
     return total_tokens * PRICE_USD_PER_INPUT_TOKEN
 
