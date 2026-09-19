@@ -7,7 +7,8 @@ Steps:
   1. Loads all raw JSON files from data/json_files/ using the filter logic
      in 2_filter_records.py (removes non-empirical content).
   2. Restricts to the 1990-2024 publication year window.
-  3. Merges in LLM policy-claim labels from all_abstracts_LLM.csv,
+  3. Merges in LLM policy-claim labels from all_abstracts_LLM.csv (DeepSeek) or,
+     with --label-col jev_policy_claim, from all_abstracts_JEV.csv (Jev 1.13),
      matching first on scopus_id then on DOI for any unmatched rows.
   4. Cleans and standardises all columns (DOI normalisation, country codes, etc.).
   5. Writes two outputs:
@@ -89,8 +90,11 @@ def filter_records(df_raw: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame, di
     return kept, dropped, dict(counts)
 
 
-def merge_llm_labels(kept: pd.DataFrame, labels_csv: Path) -> pd.DataFrame:
-    lab = pd.read_csv(labels_csv, usecols=["scopus_id", "doi", "llm_policy_claim"])
+def merge_llm_labels(kept: pd.DataFrame, labels_csv: Path, label_col: str = "llm_policy_claim") -> pd.DataFrame:
+    """Merge model labels. `label_col` lets the labels come from Jev
+    (jev_policy_claim, from 3b_run_jev_classification.py) instead of DeepSeek."""
+    lab = pd.read_csv(labels_csv, usecols=["scopus_id", "doi", label_col])
+    lab = lab.rename(columns={label_col: "llm_policy_claim"})
 
     lab_scopus = lab.dropna(subset=["scopus_id"]).drop_duplicates(subset=["scopus_id"])
     lab_doi = lab.dropna(subset=["doi"]).drop_duplicates(subset=["doi"])
@@ -199,10 +203,20 @@ def save_outputs(df: pd.DataFrame, csv_path: Path) -> None:
 def main() -> None:
     parser = argparse.ArgumentParser(description="Build the post-screening analysis dataset.")
     parser.add_argument("--raw-json-dir", type=Path, default=RAW_JSON_DIR)
-    parser.add_argument("--labels-csv", type=Path, default=LLM_LABELS_CSV)
-    parser.add_argument("--analysis-csv", type=Path, default=ANALYSIS_CSV)
-    parser.add_argument("--minimal-export", type=Path, default=MINIMAL_EXPORT_CSV)
+    parser.add_argument("--labels-csv", type=Path, default=None,
+                        help="Label file (default: all_abstracts_LLM.csv, or all_abstracts_JEV.csv when --label-col jev_policy_claim)")
+    parser.add_argument("--label-col", default="llm_policy_claim",
+                        help="Label column in --labels-csv: llm_policy_claim (DeepSeek) or jev_policy_claim (Jev)")
+    parser.add_argument("--analysis-csv", type=Path, default=None)
+    parser.add_argument("--minimal-export", type=Path, default=None)
     args = parser.parse_args()
+    tag = "" if args.label_col == "llm_policy_claim" else "_jev"
+    if args.labels_csv is None:
+        args.labels_csv = LLM_LABELS_CSV if tag == "" else LLM_LABELS_CSV.with_name("all_abstracts_JEV.csv")
+    if args.analysis_csv is None:
+        args.analysis_csv = ANALYSIS_CSV.with_name(f"analysis_dataset{tag}.csv")
+    if args.minimal_export is None:
+        args.minimal_export = MINIMAL_EXPORT_CSV.with_name(f"policy_claims_minimal{tag}.csv")
 
     df_raw = load_raw_records(args.raw_json_dir)
     print(f"Raw records: {len(df_raw)}")
@@ -212,7 +226,7 @@ def main() -> None:
     print(f"Dropped during filtering: {len(dropped)}")
     print(f"Exclusion reasons: {counts}")
 
-    merged = merge_llm_labels(kept, args.labels_csv)
+    merged = merge_llm_labels(kept, args.labels_csv, args.label_col)
     print(f"Missing LLM label after merge: {int(merged['llm_policy_claim'].isna().sum())}")
 
     analysis_df = build_analysis_dataset(merged)

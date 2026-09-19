@@ -1,0 +1,79 @@
+{
+  "version": "v1",
+  "model": "typesafe/jev-1.13",
+  "noul_threshold": 0.5,
+  "questions_hash": "1d16b25dcca8",
+  "notes": "Single source of truth for the Jev questions, loaded by code/jev_client.py and R/jev_client.R. questions_hash = sha256 of json.dumps(questions, sort_keys=True, ensure_ascii=False)[:12]; code/jev_client.py refuses to load the file if the hash no longer matches (bump version + hash when editing).",
+  "questions": {
+    "policy_claim": {
+      "type": "noul",
+      "instructions": {
+        "question": "Does `abstract` make a policy claim?",
+        "definition": "A policy claim is a statement in the concluding sentences of the abstract that directly suggests or calls for policy attention, action, regulation, or intervention.",
+        "a_statement_IS_a_policy_claim_if": [
+          "It directly suggests or calls for action, regulation, or intervention.",
+          "It can be vague (e.g. 'This has implications for policy') or specific (e.g. 'States should ban X').",
+          "It may be directed at a specific body or group (e.g. governments, public health organizations, healthcare professionals) or be general (e.g. 'future policies should').",
+          "It appears in the concluding sentences of the abstract."
+        ],
+        "a_statement_is_NOT_a_policy_claim_if": [
+          "It is a suggestion for future research.",
+          "It is a finding or a statement of fact with no call to action.",
+          "It is a background statement that motivates the research (usually at the start of the abstract)."
+        ]
+      },
+      "criteria": {
+        "true": {
+          "meaning": "The concluding sentences of `abstract` call for or suggest policy action, regulation or intervention, or state that the findings have implications for policy (vague or specific, addressed to anyone).",
+          "examples": [
+            "Our analysis of traffic data from 2020-2024 revealed that the new roundabout reduced accidents by 45%. These findings have significant implications for urban planning policy and should be considered by municipal transport authorities.",
+            "Our study shows a strong correlation between green space exposure and reduced symptoms of anxiety. To improve public health, municipal governments should enact zoning policies that mandate the inclusion of parks and green areas in all new housing developments.",
+            "These results have important policy implications..."
+          ]
+        },
+        "false": {
+          "meaning": "`abstract` makes no call to action: it only reports findings or facts, gives background, or suggests future research.",
+          "examples": [
+            "We conducted a randomized controlled trial of a new diabetes drug. While the drug showed promise, there was no statistically significant improvement over existing treatments. Further investigation with a larger sample size is warranted to determine its efficacy.",
+            "This paper reviews the historical literature concerning the United Kingdom's housing crisis. The data show that housing affordability has declined steadily since the 1980s across all regions, presenting a significant challenge for young adults."
+          ]
+        }
+      }
+    },
+    "policy_claim_choice": {
+      "type": "choice",
+      "instructions": {
+        "question": "Does `abstract` make a policy claim?",
+        "definition": "A policy claim is a statement in the concluding sentences of the abstract that directly suggests or calls for policy attention, action, regulation, or intervention.",
+        "a_statement_IS_a_policy_claim_if": [
+          "It directly suggests or calls for action, regulation, or intervention.",
+          "It can be vague (e.g. 'This has implications for policy') or specific (e.g. 'States should ban X').",
+          "It may be directed at a specific body or group (e.g. governments, public health organizations, healthcare professionals) or be general (e.g. 'future policies should').",
+          "It appears in the concluding sentences of the abstract."
+        ],
+        "a_statement_is_NOT_a_policy_claim_if": [
+          "It is a suggestion for future research.",
+          "It is a finding or a statement of fact with no call to action.",
+          "It is a background statement that motivates the research (usually at the start of the abstract)."
+        ]
+      },
+      "criteria": {
+        "yes": {
+          "meaning": "The concluding sentences of `abstract` call for or suggest policy action, regulation or intervention, or state that the findings have implications for policy (vague or specific, addressed to anyone).",
+          "examples": [
+            "Our analysis of traffic data from 2020-2024 revealed that the new roundabout reduced accidents by 45%. These findings have significant implications for urban planning policy and should be considered by municipal transport authorities.",
+            "Our study shows a strong correlation between green space exposure and reduced symptoms of anxiety. To improve public health, municipal governments should enact zoning policies that mandate the inclusion of parks and green areas in all new housing developments.",
+            "These results have important policy implications..."
+          ]
+        },
+        "no": {
+          "meaning": "`abstract` makes no call to action: it only reports findings or facts, gives background, or suggests future research.",
+          "examples": [
+            "We conducted a randomized controlled trial of a new diabetes drug. While the drug showed promise, there was no statistically significant improvement over existing treatments. Further investigation with a larger sample size is warranted to determine its efficacy.",
+            "This paper reviews the historical literature concerning the United Kingdom's housing crisis. The data show that housing affordability has declined steadily since the 1980s across all regions, presenting a significant challenge for young adults."
+          ]
+        }
+      }
+    }
+  }
+}

@@ -41,10 +41,109 @@ The cost and time to process such a large number of abstracts are dependent on t
 
 ---
 
+## Jev 1.13 replication (Python and R)
+
+This branch re-runs the policy-claim classification with **Jev 1.13** (TypeSafe AI, via the
+[OpenRouter Decisions API](https://openrouter.ai/typesafe/jev-1.13)) to test how fast and how accurate
+it is compared with the DeepSeek V3.1 labels used in the paper, and with the human reviews stored in
+`table/`. Everything below runs from the repository root. Nothing in the original pipeline was changed
+except that `code/4_build_analysis_dataset.py` gained a `--label-col` option.
+
+### How Jev differs from a chat model
+
+Jev is a "System One" decision model: it does not generate text, so there is no prompt and no JSON to
+parse. A request sends a `state` (the abstract) plus typed *questions* and gets back calibrated
+probabilities. It cannot be used through `/chat/completions`; OpenRouter routes it via
+`POST https://openrouter.ai/api/alpha/decisions`. Pricing is per input token only ($0.042 per million;
+about $0.00007 per abstract with the two questions below).
+
+The questions live in one file, **`code/jev_questions.json`**, loaded by both `code/jev_client.py` and
+`R/jev_client.R` (each verifies the file's hash, so the two implementations cannot drift apart):
+
+* `policy_claim` (Noul, yes/no probability) - the primary label: `P(policy claim) >= 0.5`.
+* `policy_claim_choice` (yes/no Choice) - the same judgement as a choice, with a confidence value.
+
+The wording mirrors the DeepSeek prompt in `code/3_run_llm_classification.py` (definition, inclusion and
+exclusion rules, the same five worked examples). It was checked once on the 400-abstract study-design
+sample (DeepSeek labels only) and then frozen before the human-reviewed samples were scored; the 0.5
+threshold was fixed in advance.
+
+### Setup
+
+```bash
+cp .env.example .env        # add OPENROUTER_API_KEY (and SCOPUS_API_KEY for step 1)
+pip install pandas numpy scipy scikit-learn requests python-dotenv tqdm openpyxl matplotlib
+Rscript -e 'install.packages(c("tidyverse","httr2","jsonlite","readxl","here","digest"))'
+```
+
+The repository's `.env` takes precedence over an `OPENROUTER_API_KEY` in the environment or `~/.Renviron`.
+
+### Run
+
+Validation on the human-reviewed samples (~1,400 requests, about $0.15, ~3 minutes):
+
+```bash
+bash run_jev_validation.sh      # Python -> concordance/jev_outputs/, table/jev_*.csv|md
+bash run_jev_validation_R.sh    # R      -> concordance/jev_outputs_R/, table/jev_*_R.csv|md
+```
+
+Full corpus (needs the Scopus abstracts, which cannot be redistributed; ~45,800 requests, about $3.30,
+under an hour at 16 concurrent requests):
+
+```bash
+python code/1_fetch_abstracts.py                                  # or: Rscript R/01_fetch_abstracts.R
+python code/2_filter_records.py --dir data/json_files              # or: Rscript R/02_filter_records.R
+python code/3b_run_jev_classification.py data/json_files/filtered/all_abstracts.json --workers 16 --budget-usd 8
+                                                                   # or: Rscript R/03_run_jev_classification.R data/json_files/filtered/all_abstracts.json --workers 16
+python code/4_build_analysis_dataset.py --label-col jev_policy_claim   # writes data/analysis/*_jev.csv
+python code/12_jev_accuracy.py                                     # adds the corpus comparison and Table 1 replication
+```
+
+Runs are resumable (already-scored rows are skipped) and stop at `--budget-usd`.
+
+### Results on the validation samples (19 September 2026)
+
+Full tables: `table/jev_accuracy_report.md` (Python) and `table/jev_accuracy_report_R.md` (R, identical
+point estimates). Cohen's kappa with bootstrap 95% CIs; the human references are those used in the paper.
+
+| Comparison | n | DeepSeek V3.1 | Jev 1.13 (Noul) |
+|---|---|---|---|
+| Agreement with adjudicated gold standard (kappa) | 204 | 0.80 (0.70-0.89) | 0.79 (0.69-0.89) |
+| ... sensitivity / specificity | 204 | 0.96 / 0.92 | 0.89 / 0.94 |
+| Agreement with blinded stratified review, adjudicated (kappa) | 400 | 0.66 (0.57-0.73) | 0.77 (0.69-0.83) |
+| ... sensitivity / specificity | 400 | 0.66 / 0.95 | 0.81 / 0.94 |
+| Human-human agreement on the same 400 (kappa) | 400 | 0.87 | 0.87 |
+| Test-retest across 3 runs (kappa) | 204 | 0.90-0.98 | 1.00 (max change in P = 0.06) |
+| Agreement Jev vs DeepSeek (kappa) | 204 / 400 | - | 0.82 / 0.84 |
+| Throughput (abstracts per second) | | ~1.3 (5 workers) | 20 (8 workers), 26 (16 workers) |
+| Latency per request (p50) | | - | ~0.3 s |
+| Estimated time / cost for 45,807 abstracts | | ~10 h / ~$3 | ~0.5-0.6 h / ~$3.30 |
+
+Jev's probabilities are well calibrated against the human labels (AUC 0.98 on the gold standard, 0.96 on
+the blinded 400) and its policy-claim rate by period tracks the manual rate more closely than DeepSeek's
+(`table/jev_claim_rate_by_period_400.csv`).
+
+### Files added
+
+| File | Purpose |
+|---|---|
+| `code/jev_questions.json` | The questions asked of Jev (single source of truth, hashed) |
+| `code/jev_client.py`, `R/jev_client.R` | API client: request/response, retries, budget cap, latency capture |
+| `code/3b_run_jev_classification.py`, `R/03_run_jev_classification.R` | Classify any table with an `abstract` column; resumable; writes `*_timing.json` |
+| `code/11_jev_speed_benchmark.py`, `R/11_jev_speed_benchmark.R` | Throughput/latency/cost at several concurrency levels, extrapolated to the corpus |
+| `code/12_jev_accuracy.py`, `R/12_jev_accuracy.R` | Accuracy vs DeepSeek and human reviewers; test-retest; corpus comparison; Table 1 replication |
+| `R/01_fetch_abstracts.R`, `R/02_filter_records.R`, `R/04_build_analysis_dataset.R` | tidyverse ports of steps 1, 2 and 4 |
+| `run_jev_validation.sh`, `run_jev_validation_R.sh` | Drivers for the validation runs |
+| `concordance/jev_outputs*/` | Jev outputs for the validation samples (no abstracts) |
+| `table/jev_*`, `figures/jev_*` | Results |
+
+---
+
 ## File Structure
 
 ```
-├── code                  # data processing, LLM classification, validation, and analysis scripts
+├── code                  # data processing, LLM classification, validation, and analysis scripts (incl. Jev *_jev* scripts)
+├── R                     # tidyverse port of the pipeline for the Jev replication
 ├── concordance           # repeated LLM run outputs for concordance analyses
 ├── data                  # private source/intermediate files; not shared because abstracts are licensed
 │   ├── analysis          # full analytic datasets with abstracts
@@ -69,6 +168,7 @@ File provenance: Scopus JSON exports in `data/json_files/` are filtered by `code
 
 3. **Classify policy claims**  
    Run DeepSeek V3.1 at low temperature on each abstract using the study prompt and generate a binary indicator for the presence of a policy claim.
+   (Jev 1.13 replication: `code/3b_run_jev_classification.py` / `R/03_run_jev_classification.R`, see the section above.)
 
 4. **Human validation**  
    Draw samples for blinded human review and compute agreement metrics against model outputs to assess reliability of the automated classification.

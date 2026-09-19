@@ -1,0 +1,5 @@
+model,workers,n_abstracts,n_failed,wall_seconds,throughput_per_second,latency_ms_p50,latency_ms_p90,latency_ms_p99,latency_ms_mean,input_tokens_mean,cost_usd_total,cost_usd_per_abstract,est_hours_for_corpus,est_cost_usd_for_corpus,run_utc
+typesafe/jev-1.13,1,100,0,19.43,5.147,339.9,425,1077.5,367.9,1712.7,0.00719,7.19e-5,2.47,3.3,2026-09-19T18:52:25+0000
+typesafe/jev-1.13,4,100,0,7.4,13.521,303.3,408.8,837.9,329.3,1712.7,0.00719,7.19e-5,0.94,3.3,2026-09-19T18:52:25+0000
+typesafe/jev-1.13,8,100,0,4.68,21.386,307.4,449.5,935.2,357,1712.7,0.00719,7.19e-5,0.59,3.3,2026-09-19T18:52:25+0000
+typesafe/jev-1.13,16,100,0,5.17,19.33,402.7,1560.6,1916.9,732.7,1712.7,0.00719,7.19e-5,0.66,3.3,2026-09-19T18:52:25+0000
