@@ -1,4 +1,4 @@
 comparison,n,kappa,agreement_pct,mean_abs_diff_p_yes,max_abs_diff_p_yes,deepseek_kappa_reference
-run1 vs run2,204,1,100,0.0043,0.05,0.905
-run1 vs run3,204,1,100,0.0047,0.04,0.93
-run2 vs run3,204,1,100,0.0046,0.05,0.978
+run1 vs run2,204,1,100,0.0043,0.03,0.905
+run1 vs run3,204,1,100,0.0046,0.04,0.93
+run2 vs run3,204,1,100,0.0042,0.06,0.978
