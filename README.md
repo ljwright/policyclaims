@@ -132,11 +132,32 @@ point estimates). Cohen's kappa with bootstrap 95% CIs; the human references are
 | Agreement Jev vs DeepSeek (kappa) | 204 / 400 | - | 0.82 / 0.84 |
 | Throughput (abstracts per second) | | ~1.3 (5 workers) | 20 (8 workers), 26 (16 workers) |
 | Latency per request (p50) | | - | ~0.3 s |
-| Estimated time / cost for 45,807 abstracts | | ~10 h / ~$3 | ~0.5-0.6 h / ~$3.30 |
+| Full corpus (46,279 abstracts): wall time / cost | | ~10 h / ~$3 | 14.7 min / $3.27 (16 workers, 52 abstracts/s) |
 
 Jev's probabilities are well calibrated against the human labels (AUC 0.98 on the gold standard, 0.96 on
 the blinded 400) and its policy-claim rate by period tracks the manual rate more closely than DeepSeek's
 (`table/jev_claim_rate_by_period_400.csv`).
+
+### Results on the full corpus (Scopus re-download of 19 September 2026)
+
+The abstracts were re-fetched from Scopus (51,061 raw records, 46,279 after the paper's filters; the paper's
+2025 download gave 50,533 and 45,807) and classified in one run. 45,671 abstracts matched the published derived
+dataset by DOI and carry both labels (`derived_data/policy_claims_jev.csv` holds the Jev labels, probabilities
+and the DeepSeek label for every record, without abstracts).
+
+| | DeepSeek V3.1 (paper) | Jev 1.13 |
+|---|---|---|
+| Policy-claim rate, all years | 25.6% | 31.1% |
+| By period: 1990-99 / 2000-09 / 2010-19 / 2020-24 | 17.7 / 22.8 / 28.4 / 35.8% | 23.0 / 27.6 / 34.2 / 42.0% |
+| Lowest and highest journal | Epidemiology 3.7%, Lancet Public Health 62.4% | Epidemiology 4.8%, Lancet Public Health 76.9% |
+| Agreement with the other model | 92.6% (kappa 0.82, 95% CI 0.81-0.83) | same |
+| Jev sensitivity / specificity taking DeepSeek as reference | | 0.96 / 0.91 |
+
+Jev labels more abstracts as making a policy claim, but the paper's findings hold under either model: the rise
+over time, the ordering of journals and of countries, and the higher rates in qualitative and cross-sectional
+studies than in experimental and case-control studies (`table/jev_table1_replication.csv`,
+`table/jev_corpus_by_*.csv`, `figures/jev_vs_deepseek_trend.png`). Both models undercount claims relative to
+the blinded human reviewers, Jev less so (see the previous table).
 
 ### Files added
 
@@ -152,6 +173,7 @@ the blinded 400) and its policy-claim rate by period tracks the manual rate more
 | `run_jev_validation.sh`, `run_jev_validation_R.sh` | Drivers for the validation runs |
 | `concordance/jev_outputs*/` | Jev outputs for the validation samples (no abstracts) |
 | `table/jev_*`, `figures/jev_*` | Results |
+| `derived_data/policy_claims_jev.csv` | Jev labels and probabilities for the full corpus (no abstracts) |
 
 ---
 

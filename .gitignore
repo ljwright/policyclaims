@@ -45,3 +45,6 @@ venv313/
 code/audit_data_provenance.py
 
 /code_review/
+
+# R duplicate of the Jev derived file (the Python one is committed)
+derived_data/policy_claims_jev_R.csv

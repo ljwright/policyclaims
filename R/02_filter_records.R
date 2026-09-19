@@ -7,7 +7,7 @@
 # reviews of any kind (systematic, scoping, umbrella, narrative, rapid,
 # meta-analysis, or "review" in the title/keywords).
 #
-# Usage: Rscript R/02_filter_records.R [--dir data/json_files] [--log data/json_files/excluded_records.csv]
+# Usage: Rscript R/02_filter_records.R [--dir data/json_files] [--log data/json_files/excluded_records.csv] [--combined-name all_abstracts.json]
 # Writes data/json_files/filtered/<file>.filtered.json per input and the combined
 # data/json_files/filtered/all_abstracts.json. The functions are also sourced by
 # 04_build_analysis_dataset.R.
@@ -67,6 +67,7 @@ main <- function() {
   opt <- function(flag, default) { i <- match(flag, args); if (is.na(i)) default else args[[i + 1]] }
   in_dir <- resolve_path(opt("--dir", "data/json_files"))
   log_csv <- opt("--log", NULL)
+  combined_name <- opt("--combined-name", "all_abstracts.json")   # name of the combined output in <dir>/filtered/
   out_dir <- file.path(in_dir, "filtered"); dir.create(out_dir, showWarnings = FALSE, recursive = TRUE)
   files <- list.files(in_dir, "\\.json$", full.names = TRUE)
   cat(sprintf("Found %d .json files in %s\n", length(files), in_dir))
@@ -83,8 +84,8 @@ main <- function() {
     cat(sprintf("[filter] %s: kept=%d dropped=%d (%s) -> %s\n", basename(f), length(res$kept), length(res$dropped), summary, basename(out)))
     combined <- c(combined, res$kept)
   }
-  write_json(combined, file.path(out_dir, "all_abstracts.json"), auto_unbox = TRUE, pretty = TRUE, null = "null")
-  cat(sprintf("[combine] Wrote %d records to %s\n", length(combined), file.path(out_dir, "all_abstracts.json")))
+  write_json(combined, file.path(out_dir, combined_name), auto_unbox = TRUE, pretty = TRUE, null = "null")
+  cat(sprintf("[combine] Wrote %d records to %s\n", length(combined), file.path(out_dir, combined_name)))
 }
 
 if (sys.nframe() == 0) main()

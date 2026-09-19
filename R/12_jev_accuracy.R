@@ -200,6 +200,11 @@ if (!file.exists(CORPUS_JEV)) {
     left_join(dv |> distinct(tkey, .keep_all = TRUE) |> select(tkey, llm_policy_claim_t = llm_policy_claim, design_combined_t = design_combined), by = "tkey") |>
     mutate(llm_policy_claim = coalesce(llm_policy_claim, llm_policy_claim_t), design_combined = coalesce(design_combined, design_combined_t), deepseek = norm_bool(llm_policy_claim)) |>
     select(-llm_policy_claim_t, -design_combined_t)
+  # Shareable derived file (metadata + Jev results, no abstracts); the Python run writes derived_data/policy_claims_jev.csv
+  m |> mutate(deepseek_policy_claim = deepseek) |>
+    select(any_of(c("scopus_id", "doi", "title", "journal", "publication_year", "keywords", "corresponding_author_country", "design_combined",
+                    "jev_policy_claim", "jev_p_yes", "jev_choice", "jev_choice_p_yes", "jev_choice_confidence", "jev_model", "jev_questions_hash", "deepseek_policy_claim"))) |>
+    write_csv(file.path(ROOT, "derived_data", paste0("policy_claims_jev", SUFFIX, ".csv")), na = "")
   matched <- m |> filter(!is.na(deepseek)) |>
     mutate(agree = deepseek == jev_noul, period = cut(as.integer(publication_year), c(1989, 1999, 2009, 2019, 2024), labels = PERIODS$period),
            country = str_to_upper(str_trim(as.character(corresponding_author_country))))

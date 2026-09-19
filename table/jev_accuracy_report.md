@@ -99,9 +99,80 @@ DeepSeek reference (paper): kappa 0.90-0.98 across three runs of 200 abstracts a
 | run1 vs run3 | 204 | 1 | 100 | 0.005 | 0.040 | 0.930 |
 | run2 vs run3 | 204 | 1 | 100 | 0.004 | 0.060 | 0.978 |
 
-## 5. Full corpus
+## 5. Full corpus: Jev vs DeepSeek
 
-_Not yet run: `data/json_files/filtered/all_abstracts_JEV.csv` not found. Fetch the abstracts (1_fetch_abstracts.py, 2_filter_records.py) and run 3b_run_jev_classification.py._
+Matched 45,671 of 46,279 Jev-classified abstracts to the derived dataset by DOI (fallback title+journal+year); 608 unmatched.
+
+| comparison | n | agreement_pct | agreement_ci | kappa | kappa_ci | sensitivity | specificity | ppv | npv | prevalence_ref_pct | prevalence_pred_pct |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| corpus: Jev noul vs DeepSeek | 45671 | 92.600 | (92.4, 92.9) | 0.819 | (0.813, 0.825) | 0.963 | 0.913 | 0.793 | 0.986 | 25.600 | 31.100 |
+| corpus: Jev choice vs DeepSeek | 45671 | 92.300 | (92.1, 92.6) | 0.812 | (0.806, 0.819) | 0.967 | 0.908 | 0.783 | 0.987 | 25.600 | 31.600 |
+
+### By period (Table 1 style, % with policy claim)
+
+| row | DeepSeek 1990-1999 | Jev 1990-1999 | DeepSeek 2000-2009 | Jev 2000-2009 | DeepSeek 2010-2019 | Jev 2010-2019 | DeepSeek 2020-2024 | Jev 2020-2024 | DeepSeek All years | Jev All years |
+|---|---|---|---|---|---|---|---|---|---|---|
+| All abstracts | 17.700 | 23 | 22.800 | 27.600 | 28.400 | 34.200 | 35.800 | 42 | 25.600 | 31.100 |
+| Journal: American Journal of Epidemiology | 8.200 | 10.400 | 8.600 | 9.700 | 11 | 12.400 | 15.600 | 18.500 | 9.900 | 11.600 |
+| Journal: American Journal of Preventive Medicine | 31.700 | 41 | 37.200 | 45.100 | 35.900 | 44.900 | 47.200 | 56.700 | 38.200 | 47.100 |
+| Journal: American Journal of Public Health | 24.500 | 31.700 | 33.700 | 40.600 | 38.600 | 48.700 | 46.200 | 55.700 | 33.700 | 42 |
+| Journal: Epidemiology | 1.300 | 2.300 | 4.200 | 4.600 | 4.500 | 5.900 | 5.100 | 7.700 | 3.700 | 4.800 |
+| Journal: European Journal of Epidemiology | 19.500 | 23.500 | 15.300 | 18.100 | 10 | 11.600 | 14.300 | 15.700 | 14.400 | 16.800 |
+| Journal: European Journal of Public Health | 27.800 | 33.500 | 33.600 | 40.300 | 40.300 | 45.200 | 45.200 | 51.100 | 38.600 | 44.300 |
+| Journal: International Journal of Epidemiology | 15.400 | 19.900 | 20 | 23 | 16.400 | 18.800 | 20 | 22.900 | 17.500 | 20.800 |
+| Journal: Journal of Epidemiology and Community Health | 20.800 | 27 | 25.900 | 30.200 | 30.500 | 35.200 | 40.800 | 44.200 | 28.700 | 33.400 |
+| Journal: Lancet Public Health |  |  |  |  | 59.100 | 75.600 | 64 | 77.600 | 62.400 | 76.900 |
+| Journal: Preventive Medicine | 25.100 | 35.900 | 30.300 | 40.200 | 38.100 | 45.900 | 45.300 | 53.200 | 35.700 | 44.500 |
+
+### By journal
+
+| journal | n | deepseek_rate_pct | jev_rate_pct | agreement_pct | kappa |
+|---|---|---|---|---|---|
+| Epidemiology | 3094 | 3.700 | 4.800 | 97.700 | 0.718 |
+| American Journal of Epidemiology | 7914 | 9.900 | 11.600 | 96.600 | 0.821 |
+| European Journal of Epidemiology | 2655 | 14.400 | 16.800 | 96 | 0.850 |
+| International Journal of Epidemiology | 4790 | 17.500 | 20.800 | 95 | 0.838 |
+| Journal of Epidemiology and Community Health | 4269 | 28.700 | 33.400 | 93.500 | 0.848 |
+| American Journal of Public Health | 7801 | 33.700 | 42 | 89.900 | 0.786 |
+| Preventive Medicine | 6366 | 35.700 | 44.500 | 89.100 | 0.776 |
+| American Journal of Preventive Medicine | 5177 | 38.200 | 47.100 | 88.200 | 0.760 |
+| European Journal of Public Health | 3206 | 38.600 | 44.300 | 92.300 | 0.842 |
+| Lancet Public Health | 399 | 62.400 | 76.900 | 84.500 | 0.641 |
+
+### Top-15 countries (first author)
+
+| country | n | deepseek_rate_pct | jev_rate_pct | agreement_pct | kappa |
+|---|---|---|---|---|---|
+| NORWAY | 599 | 12 | 14 | 97 | 0.867 |
+| DENMARK | 1019 | 14.100 | 17.300 | 96.100 | 0.852 |
+| JAPAN | 535 | 16.300 | 17.900 | 97.200 | 0.901 |
+| SWEDEN | 1518 | 17.500 | 20.400 | 96 | 0.872 |
+| GERMANY | 698 | 21.200 | 23.900 | 96.400 | 0.898 |
+| FINLAND | 789 | 21.300 | 25 | 94.800 | 0.854 |
+| NETHERLANDS | 1679 | 22.600 | 27.100 | 94 | 0.839 |
+| ITALY | 864 | 23.100 | 27 | 94.800 | 0.862 |
+| FRANCE | 1118 | 24.100 | 28 | 94.500 | 0.856 |
+| SPAIN | 798 | 25.300 | 29.400 | 95.100 | 0.877 |
+| UNITED KINGDOM | 4546 | 25.700 | 30.600 | 92.900 | 0.825 |
+| CHINA | 569 | 26.900 | 29.900 | 93.100 | 0.832 |
+| UNITED STATES | 23989 | 26.900 | 33.400 | 91.500 | 0.800 |
+| CANADA | 1960 | 27.400 | 31.800 | 93 | 0.831 |
+| AUSTRALIA | 1338 | 30.300 | 36.800 | 91.300 | 0.807 |
+
+### By study design
+
+| design_combined | n | deepseek_rate_pct | jev_rate_pct | agreement_pct | kappa |
+|---|---|---|---|---|---|
+| Case-control | 2428 | 9.900 | 11.300 | 97.600 | 0.872 |
+| Cohort | 7192 | 20.200 | 23.100 | 95.500 | 0.868 |
+| Cross-sectional | 2021 | 36.900 | 43.400 | 92.200 | 0.838 |
+| Ecological / Time-series | 516 | 26.600 | 30.800 | 93.400 | 0.839 |
+| Experimental | 2063 | 13.800 | 18.400 | 92.400 | 0.721 |
+| Other/None | 30644 | 28.100 | 34.500 | 91.600 | 0.806 |
+| Qualitative | 122 | 46.700 | 61.500 | 85.200 | 0.709 |
+| Quasi-experimental | 685 | 25.700 | 31.700 | 92 | 0.805 |
+
+![trend](../figures/jev_vs_deepseek_trend.png)
 
 ## 6. Speed and cost
 
@@ -116,6 +187,7 @@ Jev runs recorded by 3b_run_jev_classification.py:
 | jev_gold_standard_run2 | 204 | 8 | 9.310 | 21.906 | 291 | 380 | 0.014 | 1685 |
 | jev_gold_standard_run3 | 204 | 8 | 8.820 | 23.129 | 292 | 398 | 0.014 | 1685 |
 | jev_stratified400 | 400 | 8 | 16.370 | 24.431 | 290 | 383 | 0.028 | 1685 |
+| all_abstracts_JEV | 46279 | 16 | 881.820 | 52.481 | 292 | 365 | 3.272 | 1684 |
 
 Concurrency benchmark (11_jev_speed_benchmark.py):
 

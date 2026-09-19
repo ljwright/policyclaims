@@ -25,7 +25,7 @@ sensitivity, specificity, PPV, NPV, and both prevalences):
 Jev labels: `noul` = P(policy claim) >= 0.5 (primary); `choice` = yes/no Choice.
 
 Inputs are the outputs of 3b_run_jev_classification.py (see run_jev_validation.sh).
-Outputs: table/jev_accuracy_summary.csv, table/jev_accuracy_report.md,
+Outputs: table/jev_accuracy_summary.csv, table/jev_accuracy_report.md, derived_data/policy_claims_jev.csv (corpus),
          table/jev_test_retest.csv, table/jev_mismatches_gold.csv,
          table/jev_claim_rate_by_period_400.csv, table/jev_corpus_by_*.csv,
          table/jev_table1_replication.csv, figures/jev_*.png
@@ -328,6 +328,12 @@ def section_corpus(summary: list, report: list) -> None:
         m.loc[miss, "design_combined"] = m.loc[miss, "design_combined_t"]
         m = m.drop(columns=["llm_policy_claim_t", "design_combined_t"])
     m["deepseek"] = m["llm_policy_claim"].map(norm_bool)
+    # Shareable derived file (metadata + Jev results, no abstracts), the Jev analogue of policy_claims_minimal.csv
+    export_cols = [c for c in ["scopus_id", "doi", "title", "journal", "publication_year", "keywords", "corresponding_author_country",
+                               "design_combined", "jev_policy_claim", "jev_p_yes", "jev_choice", "jev_choice_p_yes", "jev_choice_confidence",
+                               "jev_model", "jev_questions_hash"] if c in m.columns]
+    (m.assign(deepseek_policy_claim=m["deepseek"])[export_cols + ["deepseek_policy_claim"]]
+       .to_csv(ROOT / "derived_data" / "policy_claims_jev.csv", index=False))
     matched = m[m["deepseek"].notna()].copy()
     n_unmatched = int(m["deepseek"].isna().sum())
     rows = [metrics(matched["deepseek"], matched["jev_noul"], label="corpus: Jev noul vs DeepSeek", n_boot=200),

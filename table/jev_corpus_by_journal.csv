@@ -1,0 +1,11 @@
+journal,n,deepseek_rate_pct,jev_rate_pct,agreement_pct,kappa
+Epidemiology,3094,3.7,4.8,97.7,0.718
+American Journal of Epidemiology,7914,9.9,11.6,96.6,0.821
+European Journal of Epidemiology,2655,14.4,16.8,96.0,0.85
+International Journal of Epidemiology,4790,17.5,20.8,95.0,0.838
+Journal of Epidemiology and Community Health,4269,28.7,33.4,93.5,0.848
+American Journal of Public Health,7801,33.7,42.0,89.9,0.786
+Preventive Medicine,6366,35.7,44.5,89.1,0.776
+American Journal of Preventive Medicine,5177,38.2,47.1,88.2,0.76
+European Journal of Public Health,3206,38.6,44.3,92.3,0.842
+Lancet Public Health,399,62.4,76.9,84.5,0.641
