@@ -101,6 +101,21 @@ python code/12_jev_accuracy.py                                     # adds the co
 
 Runs are resumable (already-scored rows are skipped) and stop at `--budget-usd`.
 
+**If the Scopus COMPLETE view is refused** (HTTP 401 "not authorized to access the requested view": the key has no
+institutional entitlement, e.g. off the university network and no `INST_TOKEN`), abstracts for the paper's
+analytic sample can instead be fetched from PubMed, free and without a key. All ten journals are in MEDLINE;
+records are matched to `derived_data/policy_claims_minimal.csv` by DOI, then by normalised title:
+
+```bash
+python code/1b_fetch_abstracts_pubmed.py        # or: Rscript R/01b_fetch_abstracts_pubmed.R
+python code/3b_run_jev_classification.py data/json_files/filtered/all_abstracts_pubmed.json --workers 16 --budget-usd 8
+python code/12_jev_accuracy.py --corpus data/json_files/filtered/all_abstracts_pubmed_JEV.csv
+```
+
+PubMed abstracts are the same publisher-supplied text as Scopus's but can differ in section labels and trailing
+copyright notices, so this is a close rather than exact re-run of the paper's input. Match statistics are written
+to `data/json_files/pubmed/match_stats.csv`.
+
 ### Results on the validation samples (19 September 2026)
 
 Full tables: `table/jev_accuracy_report.md` (Python) and `table/jev_accuracy_report_R.md` (R, identical
@@ -133,6 +148,7 @@ the blinded 400) and its policy-claim rate by period tracks the manual rate more
 | `code/11_jev_speed_benchmark.py`, `R/11_jev_speed_benchmark.R` | Throughput/latency/cost at several concurrency levels, extrapolated to the corpus |
 | `code/12_jev_accuracy.py`, `R/12_jev_accuracy.R` | Accuracy vs DeepSeek and human reviewers; test-retest; corpus comparison; Table 1 replication |
 | `R/01_fetch_abstracts.R`, `R/02_filter_records.R`, `R/04_build_analysis_dataset.R` | tidyverse ports of steps 1, 2 and 4 |
+| `code/1b_fetch_abstracts_pubmed.py`, `R/01b_fetch_abstracts_pubmed.R` | PubMed fallback for the abstracts (matches the derived dataset by DOI/title) |
 | `run_jev_validation.sh`, `run_jev_validation_R.sh` | Drivers for the validation runs |
 | `concordance/jev_outputs*/` | Jev outputs for the validation samples (no abstracts) |
 | `table/jev_*`, `figures/jev_*` | Results |
